@@ -1,0 +1,1 @@
+ED25519 REF10 from https://github.com/jedisct1/supercop/tree/master/crypto_sign/ed25519/ref10
