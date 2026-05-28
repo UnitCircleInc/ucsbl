@@ -46,7 +46,7 @@ LOG_PORT_MAX = 8
 LOG_DEFAULT_HOST = "localhost"
 LOG_DEFAULT_BASE = 9000
 
-DEFAULT_BR = 1000000  # 115200
+DEFAULT_BR = 1000000  # 230400  # 115200
 
 # Monkey patch cbor to change default flags/config
 orig_dumps = cbor2.dumps

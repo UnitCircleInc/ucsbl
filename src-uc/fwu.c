@@ -41,15 +41,11 @@ typedef enum fwu_state_e {
   FWU_WAIT_BLOCK,
   FWU_WAIT_SCHEDULE,
   FWU_UPDATE,
-  FWU_REJECT,
-  FWU_WATCHDOG_RESET,
 } fwu_state_t;
 
 static struct {
   uint64_t timestamp;
   uint32_t offset;
-  uint32_t reset_reason;
-  sbl_rsp_t sbl_rsp;
   fwu_state_t state;
 } fwu_state = {
   .state = FWU_WAIT_START
@@ -91,45 +87,6 @@ static void program_data(size_t n, uint32_t data[n]) {
   }
 }
 
-static void accept_image(void) {
-  LOG_INFO("accept image");
-  // Erase slot1[page0] - i.e. the signature of the "old" image
-  // Only issue erase command if page not already erased
-  for (size_t index = 0; index < PAGE_SIZE; index++) {
-    if (slot1__[index] != 0xffffffff) {
-      nrf_nvmc_page_erase((uint32_t) &slot1__[PAGE_START(index)]);
-    }
-  }
-}
-
-static void reject_image(void) {
-  LOG_INFO("rejecting image");
-  fwu_state.state = FWU_REJECT;
-}
-
-
-static void watchdog_reset(void) {
-  LOG_INFO("secheduling watchdog reset image");
-  fwu_state.state = FWU_WATCHDOG_RESET;
-}
-
-
-static uint64_t as_uint64(const uint8_t b[8]) {
-  uint64_t v = b[7];
-  v = v * 256U + b[6];
-  v = v * 256U + b[5];
-  v = v * 256U + b[4];
-  v = v * 256U + b[3];
-  v = v * 256U + b[2];
-  v = v * 256U + b[1];
-  return  v * 256U + b[0];
-}
-
-// ENHANCEMENT: Move to libsbl
-static uint64_t sbl_app_timestamp(uintptr_t p) {
-  return as_uint64(((const uint8_t*) p)+64U+4U);
-}
-
 size_t fwu_cmd(const uint8_t* rx, size_t rx_n, uint8_t* tx, size_t tx_n) {
   static uint32_t data[1024/sizeof(uint32_t)];
   char cmd[20];
@@ -138,13 +95,7 @@ size_t fwu_cmd(const uint8_t* rx, size_t rx_n, uint8_t* tx, size_t tx_n) {
   cbor_init(&s, (uint8_t*) rx, rx_n);
   cbor_error_t e = cbor_unpack(&s, "{.cmd:s}", cmd, &cmd_n);
 
-  //LOG_MEM_INFO("rx:", rx, rx_n);
-
-  if (e != CBOR_ERROR_NONE) {
-    LOG_ERROR("cmd error: %d n: %zu", e, cmd_n);
-    fwu_state.state = FWU_WAIT_START;
-    return respond_with(tx, tx_n, "{.error:s}", "missing cmd field");
-  }
+  if (e != CBOR_ERROR_NONE) return 0;
 
   if (strncmp(cmd, "fw-start", cmd_n) == 0) {
     // TODO Cancel timer that would run boot loader as we are starting
@@ -201,58 +152,8 @@ size_t fwu_cmd(const uint8_t* rx, size_t rx_n, uint8_t* tx, size_t tx_n) {
     fwu_state.state = FWU_UPDATE;
     return respond_with(tx, tx_n, "{.rsp:s}", cmd);
   }
-  else if (strncmp(cmd, "accept-image", cmd_n) == 0) {
-    accept_image();
-    return respond_with(tx, tx_n, "{.rsp:s}", cmd);
-  }
-  else if (strncmp(cmd, "reject-image", cmd_n) == 0) {
-    reject_image();
-    return respond_with(tx, tx_n, "{.rsp:s}", cmd);
-  }
-  else if (strncmp(cmd, "watch-dog", cmd_n) == 0) {
-    watchdog_reset();
-    return respond_with(tx, tx_n, "{.rsp:s}", cmd);
-  }
-  else if (strncmp(cmd, "flash-write", cmd_n) == 0) {
-    uint32_t addr;
-    uint32_t val;
-    e = cbor_unpack(&s, "{.addr:I,.val:I}", &addr, &val);
-    if ((e != CBOR_ERROR_NONE) ||
-        ((addr % 4) != 0)) {
-      fwu_state.state = FWU_WAIT_START;
-      return respond_with(tx, tx_n, "{.rsp:s,.error:s}", cmd, "invalid");
-    }
-    LOG_INFO("flash-write: %08lx %08lx", addr, val);
-    nrf_nvmc_write_word(addr, val);
-    return respond_with(tx, tx_n, "{.rsp:s}", cmd);
-  }
-  else if (strncmp(cmd, "flash-erase", cmd_n) == 0) {
-    uint32_t addr;
-    e = cbor_unpack(&s, "{.addr:I}", &addr);
-    if ((e != CBOR_ERROR_NONE) ||
-        ((addr % 4096) != 0)) {
-      fwu_state.state = FWU_WAIT_START;
-      return respond_with(tx, tx_n, "{.rsp:s,.error:s}", cmd, "invalid");
-    }
-    LOG_INFO("flash-erase: %08lx", addr);
-    nrf_nvmc_page_erase(addr);
-    return respond_with(tx, tx_n, "{.rsp:s}", cmd);
-  }
-  else if (strncmp(cmd, "info-app", cmd_n) == 0) {
-    LOG_INFO("version");
-    return respond_with(tx, tx_n,
-        "{.rsp:s,.ver:s,.ts:Q,.sbl-rsp:I,.sbl-ver:s,.rr:I}",
-        cmd,
-        sbl_app_version((uintptr_t) slot0__),
-        sbl_app_timestamp((uintptr_t) slot0__),
-        (uint32_t) fwu_state.sbl_rsp,
-        sbl_version(),
-        fwu_state.reset_reason);
-  }
-  else {
-    fwu_state.state = FWU_WAIT_START;
-    return respond_with(tx, tx_n, "{.rsp:s,.error:s}", cmd, "invalid");
-  }
+
+  return 0;
 }
 
 void fwu_process(void) {
@@ -261,22 +162,8 @@ void fwu_process(void) {
     log_flush();
     sbl_run(SBL_CMD_INSTALL_APP);
   }
-  else if (fwu_state.state == FWU_REJECT) {
-    LOG_INFO("rejecting image - resetting to bootloader");
-    log_flush();
-    sbl_run(SBL_CMD_NONE);
-  }
-  else if (fwu_state.state == FWU_WATCHDOG_RESET) {
-    LOG_INFO("waiting for watchdog - resetting to bootloader");
-    log_flush();
-    __disable_irq();
-    for(;;) __NOP();
-  }
-
 }
 
-void fwu_init(uint32_t rr, sbl_rsp_t r) {
-  fwu_state.reset_reason = rr;
-  fwu_state.sbl_rsp = r;
+void fwu_init(void) {
   fwu_state.state = FWU_WAIT_START;
 }

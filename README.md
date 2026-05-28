@@ -27,7 +27,7 @@ Minimal Assumptions:
 
 * Platform supports disabling of JTAG/SWD.
 * Platform support limiting memory access to read only for at least 3 regions of FLASH (boot loader, manufacting data, and running application image (slot 0)).
-* Access to a platform TNRG
+* Access to a platform TRNG
 * Does NOT rely on access to a RTC or similar monotonically increasing time based counter.  This is because many embedded systems do not have an RTC.  Even for those that do, there are very few systems that can guarantee that the local counter time matches (to within a few min) a national standard (or other time based centrally maintained source of "truth").  Even for those systems that could support maintaining that gurantee, they requrie online access to the time source, which the boot loader does not have access to.
 * The application size less than ~1/2 the total amount of interal FLASH (after reserving space for Boot Loader, and manufacturing data and any internal FLASH databases).
 
@@ -67,6 +67,7 @@ is in slot 0.
 ```
 make CONFIG=nrf52840-dk -j12    # enables logging for SBL developement
 make CONFIG=nrf52840-none -j12  # disable logging for deployment
+
 ```
 
 ## Bootloaders Built

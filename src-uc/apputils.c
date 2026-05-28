@@ -323,8 +323,8 @@ const char* app_app_what(void) {
   return app_what_for_slot(APP_SLOT_0);
 }
 
-void app_run(void) {
-  if (!app_slot_valid(APP_SLOT_0)) return;
+void app_run_nocheck(void) {
+  if (app_image_for_slot(APP_SLOT_0) == NULL) return;
   log_flush();
 
   const app_mem_config_t* mem = app_mem_config();
@@ -340,6 +340,11 @@ void app_run(void) {
   __NOP();
   __NOP();
   LOG_ERROR("We should never reach here");
+}
+
+void app_run(void) {
+  if (!app_slot_valid(APP_SLOT_0)) return;
+  app_run_nocheck();
 }
 
 // This is here to "fix" unused-function errors as these functions are

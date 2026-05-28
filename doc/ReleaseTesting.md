@@ -3,10 +3,10 @@
 The script `tools/rel-test.py` runs a suite of automated tests used for release testing using a standard development board for the MCU (e.g. nRF52840-dk).  Assuming an nRF52840-dk is connected to a host computer, a typical invokation would be:
 
 ```bash
-# Build board agnositc (what will be released) and board specific (for release testing)
+# Build board agnostic (what will be released) and board specific (for testing - with some byte serial transport for uclog)
 $ make clean
 $ make CONFIG=nrf52840-none
-$ make CONFIG=nrf52850-dk
+$ make CONFIG=nrf52840-dk
 
 # In one terminal window run
 $ make CONFIG=nrf52840-dk uclog
@@ -52,6 +52,6 @@ Each test follows the rough pattern of:
 
 > Note: __Slot0 White Box__ and __Slot0 Corruption__ test suites test conditions that, if present on shipped devices, will result in _bricking_ the device.  It is not expected that in-field devices will experience these conditions except in cases of HW failure of some kind, or if some form of fault injection attack is being performed.
 
-> Note: These test suites do not cover any testing related to robustness to fault injection attacks.  To test robustness to fault injection attacks requries special bench HW and signficant time resources.  Although SBL is designed to be robust to fault injection attacks, its primary purpose is non-physical access attacks.  These are well covered by the above tests suites.
+> Note: These test suites do not cover any testing related to robustness to fault injection attacks.  To test robustness to fault injection attacks requries special HW setup and signficant time resources.  Although SBL is designed to be robust to fault injection attacks, its primary purpose is non-physical access attacks.  Non-physical access attacks are well covered by the above tests suites.
 
 > Note: The SBL under test needs to be an uncomstimzed SBL as `rel-test.py` will perform the customization using the `--manu-data-size` and `--max-app-size` arguments (or default values) and using a randomly generated root key.

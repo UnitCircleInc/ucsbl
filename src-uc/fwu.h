@@ -17,6 +17,6 @@
 #include <stddef.h>
 #include "sbl.h"
 
-void fwu_init(uint32_t rr, sbl_rsp_t r);
+void fwu_init(void);
 size_t fwu_cmd(const uint8_t* rx, size_t rx_n, uint8_t* tx, size_t tx_n);
 void fwu_process(void);

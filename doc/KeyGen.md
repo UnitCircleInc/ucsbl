@@ -13,7 +13,7 @@ The `sbl.py` tool can be used to run the following processes:
 
 These process are shown in the following diagram:
 
-![SBL Processes](SBL-processes.drawio.svg)
+![SBL Processes](SBL-Processes.drawio.svg)
 
 # Release Key Generation
 

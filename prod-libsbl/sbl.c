@@ -74,6 +74,27 @@ const char* sbl_app_version(uintptr_t p) {
   return "<invalid>";
 }
 
+static uint64_t as_uint64(const uint8_t b[8]) {
+  uint64_t v = b[7];
+  v = v * 256U + b[6];
+  v = v * 256U + b[5];
+  v = v * 256U + b[4];
+  v = v * 256U + b[3];
+  v = v * 256U + b[2];
+  v = v * 256U + b[1];
+  return  v * 256U + b[0];
+}
+
+uint64_t sbl_app_timestamp(uintptr_t p) {
+  if (p != (uintptr_t) NULL) {
+    if (p % alignof(app_signature_t) == 0U) {
+      const app_signature_t* sig = (app_signature_t*) p;
+      return as_uint64(sig->date);
+    }
+  }
+  return 0;
+}
+
 const uint8_t* sbl_app_hash(void) {
   return sig.hash;
 }

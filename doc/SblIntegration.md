@@ -1,6 +1,6 @@
 # SBL Commands/Responses
 
-SBL has the following commands/responses (see `sbl.h`).   All commands are initiated using `sbl_run(...)` which will force a SW reset to start SBL.  After completing the operation, SBL will run the application, which can then retrive the response using `sbl_rsp()`.
+SBL has the following commands/responses (see `sbl.h`).   All commands are initiated using `sbl_run(...)` which will force a SW reset to SBL.  After completing the operation, SBL will run the application, which can then retrive the response using `sbl_rsp()`.
 
 * `SBL_CMD_INSTALL_APP` - this requests that SBL attempt to install the FW in slot 1.
 * `SBL_CMD_RUN_APP` - this requests that SBL restart the existing FW.  This can be used to force updating the SBL state machine when accepting/rejecting a newly installed FW image.
@@ -29,7 +29,7 @@ A running FW image can determine the actions of SBL on the most recent reset by 
 
 
 > NOTES:
-> * In step 7, after __ACCEPTING__ the image applications may want to also eraseFLASH area `Application Slot 1 Part 2`.  Ideally this is done by a low prioirty process to minimuze the impact to the user.  This speeds up the next FW update, and the erase of both  `Application Slot 1 Part 1` and  `Application Slot 1 Part 2` will be completed.  These FLASH erase operations can take significant time, which can impact user experience if left to when the user request's a FW update.
+> * In step 7, after __ACCEPTING__ the image applications may want to also erase FLASH area `Application Slot 1 Part 2`.  Ideally this is done by a low prioirty process to minimuze the impact to the user.  This speeds up the next FW update, and the erase of both  `Application Slot 1 Part 1` and  `Application Slot 1 Part 2` will be completed.  These FLASH erase operations can take significant time, which can impact user experience if left to when the user request's a FW update.
 > * The time between steps 4 and 5 can take up to 60s.
 > * In step 7, after __REJECTING__ the image and calling `sbl_run(SBL_CMD_RUN_APP)`, it can take up to 60s before the reset completes and the existing FW in restarted.
 

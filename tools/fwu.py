@@ -67,6 +67,9 @@ if __name__ == "__main__":
             if "error" in m:
                 print(m)
                 exit(1)
+        elif args.file == "stop":
+            m = device.txrx({"cmd": "stop"})
+            print(m)
         else:
             # Need timeout to be long enough to allow erasing all slot1 pages
             m = device.txrx({"cmd": "fw-start"}, timeout=15)

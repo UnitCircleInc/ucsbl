@@ -84,7 +84,7 @@ unzip -d nordic ~/Downloads/nRF5_SDK_17.1.0_ddde560.zip  # To unpack nRF5_SDK
 # Build the project
 make clean
 make CONFIG=nrf52840-dk
-./test-siging.sh
+./test-signing.sh
 make erase load-mfi.signed load-sbl-pk
 
 # (In one termainl window) Run the log viewer

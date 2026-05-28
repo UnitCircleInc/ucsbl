@@ -13,4 +13,4 @@ SBL uses Ed25519 (RFC8032) for signing keys.  In order to protect the private po
 
 SBL has a configuration struct for holding both the public portion of the root signing key and the memory layout.  The configration is stored in FLASH using the C "static const" construction and is initialized to a random (but known) root signing key.  The SBL tool can find the locaiton of the struct using the random (but known) root signing key.  It can then replace the root signing key with the desried value and configure the memory layout.
 
-> NOTE: This approach avoids having to use special memory segments and linker instructions to place the configuraiton struct at a specific memory location.
+> NOTE: This approach avoids having to use special memory segments and linker instructions to place the configuration struct at a specific memory location.

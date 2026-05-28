@@ -52,6 +52,7 @@ modules/nrfx/hal/nrf_clock.h \
 modules/nrfx/hal/nrf_gpio.h \
 modules/nrfx/hal/nrf_nvmc.c \
 modules/nrfx/hal/nrf_nvmc.h \
+modules/nrfx/hal/nrf_power.h \
 modules/nrfx/hal/nrf_rng.h \
 modules/nrfx/hal/nrf_rtc.h \
 modules/nrfx/hal/nrf_systick.h \

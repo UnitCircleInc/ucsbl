@@ -60,3 +60,4 @@ uint32_t app_slot_length(app_slot_t slot);
 const char* app_app_what(void);
 app_type_t app_type(void);
 void app_run(void);
+void app_run_nocheck(void);

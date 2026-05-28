@@ -491,7 +491,7 @@ static bool bl_swap(bl_state_t state) {
   return false;
 }
 
-static void bl_run_app(void) {
+static void lockdown(void) {
   lockdown_bl_state();
   if (app_type() >= APP_TYPE_AFI) lockdown_mfidata();
   lockdown_app();
@@ -504,7 +504,16 @@ static void bl_run_app(void) {
 
   wdt_feed();
   log_flush();
+}
+
+static void bl_run_app(void) {
+  lockdown();
   app_run();
+}
+
+static void bl_run_app_no_check(void) {
+  lockdown();
+  app_run_nocheck();
 }
 
 // Returns true if boot loader is requesting a restart (SW reset)
@@ -750,7 +759,7 @@ int main(void) {
   sbl_cmd_t cmd = bl_get_cmd();
   bl_set_cmd(SBL_CMD_NONE);
 
-  // See if there was a reqeust to run
+  // See if there was a request to run
   if ((reset_reason() & POWER_RESETREAS_SREQ_Msk) &&
       (cmd == SBL_CMD_RUN_APP)) {
     // rsp set by "caller" - i.e. restart requestor that set SBL_CMD_RUN_APP
@@ -759,6 +768,22 @@ int main(void) {
     restart();
     mitigate_random_delay();
     restart();
+  }
+
+  // See if waking from stop - in which case just run app
+  if (reset_reason() & (POWER_RESETREAS_OFF_Msk |
+#if defined(TARGET_DEV)
+                        POWER_RESETREAS_DIF_Msk |
+#endif
+                        POWER_RESETREAS_LPCOMP_Msk)) {
+    mitigate_random_delay();
+    if (reset_reason() & (POWER_RESETREAS_OFF_Msk |
+#if defined(TARGET_DEV)
+                          POWER_RESETREAS_DIF_Msk |
+#endif
+                          POWER_RESETREAS_LPCOMP_Msk)) {
+      bl_run_app_no_check();
+    }
   }
 
   // Process 1 action  - as we might need to restart to process new cmd

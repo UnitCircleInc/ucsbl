@@ -71,11 +71,19 @@ const char* sbl_version(void);
 ///
 const char* sbl_app_version(uintptr_t p);
 
+/// @brief Returns the image date timestamp from the signature block
+///
+/// @param p address of signature block to extract version string from
+///
+/// @returns timestamp in seconds since unix epoc.
+///
+uint64_t sbl_app_timestamp(uintptr_t p);
+
 /// @brief Returns sha512 hash of the currently running APP
 ///
 /// @returns pointer to 64 byte sha512 hash of APP
 ///
-const uint8_t* sbl_app_hash(void);
+const uint8_t *sbl_app_hash(void);
 
 /// @brief State structure for sha512 functions
 ///
@@ -87,7 +95,7 @@ typedef struct sbl_sha512_s {
 ///
 /// @param ctx pointer to state structure
 ///
-void sbl_sha512_init(sbl_sha512_t* ctx);
+void sbl_sha512_init(sbl_sha512_t *ctx);
 
 /// @brief Provide next segment of data to be hashed
 ///
@@ -95,13 +103,11 @@ void sbl_sha512_init(sbl_sha512_t* ctx);
 /// @param buffer pointer to data to hash
 /// @param number of bytes in buffer to hash
 ///
-void sbl_sha512_update(sbl_sha512_t* ctx, const void *buffer, size_t len);
+void sbl_sha512_update(sbl_sha512_t *ctx, const void *buffer, size_t len);
 
 /// @brief Output the sha512 hash result
 ///
 /// @param ctx pointer to state structure
 /// @param hash pointer to where to store hash - must be at least 64 bytes.
 ///
-void sbl_sha512_final(sbl_sha512_t* ctx, void* hash);
-
-
+void sbl_sha512_final(sbl_sha512_t *ctx, void *hash);
