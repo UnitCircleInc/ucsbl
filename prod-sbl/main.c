@@ -146,14 +146,24 @@ typedef enum app_class_e {
 // Use ACL slot 0 to lock down boot loader and MFI data.
 static void lockdown_bl(void) {
 #if defined(TARGET_DEV)
-  // Assumes that a full part erase has occured so that
-  // NRF_UICR->APPROTECT == 0xffffffff
-  // NRF_UICR->DEBUGCTRL == 0xffffffff
-  if (NRF_UICR->APPROTECT != UICR_APPROTECT_PALL_HwDisabled) {
-    flash_write_uint32(&NRF_UICR->APPROTECT, UICR_APPROTECT_PALL_HwDisabled);
-    NVIC_SystemReset();
+  // See: https://docs.nordicsemi.com/bundle/comp_matrix_nrf52840/page/COMP/nrf52840/nRF52840_ic_revision_overview.html
+  // And INFO.VARIANT section of the https://docs.nordicsemi.com/bundle/ps_nrf52840/page/ficr.html#register.INFO.VARIANT
+  // Test for SoC revision >= 3
+  uint32_t variant = NRF_FICR->INFO.VARIANT;
+  uint8_t build_code = (variant >> 8) & 0xFF;
+  if (build_code >= 'F') {
+    // Assumes that a full part erase has occured so that
+    // NRF_UICR->APPROTECT == 0xffffffff
+    // NRF_UICR->DEBUGCTRL == 0xffffffff
+    if (NRF_UICR->APPROTECT != UICR_APPROTECT_PALL_HwDisabled) {
+      flash_write_uint32(&NRF_UICR->APPROTECT, UICR_APPROTECT_PALL_HwDisabled);
+      NVIC_SystemReset();
+    }
+    NRF_APPROTECT->DISABLE = APPROTECT_DISABLE_DISABLE_SwDisable;
   }
-  NRF_APPROTECT->DISABLE = APPROTECT_DISABLE_DISABLE_SwDisable;
+  else {
+    // All earlier version require no action
+  }
 #else
   // Ensure that Access Port Protect is enabled
   if (NRF_UICR->APPROTECT != UICR_APPROTECT_PALL_Enabled) {
